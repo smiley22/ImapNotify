@@ -18,6 +18,10 @@ namespace ImapNotify {
 			IconOld = notifyIcon.Icon;
 			soundPath = Path.GetDirectoryName(
 				Assembly.GetExecutingAssembly().Location)+ @"\Notify.wav";
+      if (!File.Exists(soundPath)) {
+        soundPath = Environment.GetFolderPath(Environment.SpecialFolder.Windows) +
+          @"\Media\Windows Notify.wav";
+      }
 			Location = new Point(
 				Screen.PrimaryScreen.WorkingArea.Width	- Width,
 				Screen.PrimaryScreen.WorkingArea.Height - Height);
@@ -96,6 +100,7 @@ namespace ImapNotify {
 		private void Dialog_Load(object sender, EventArgs e) {
 			textPassword.Text = Encryption.DecryptString(Properties.Settings.Default.Password);
 			EnableFields(!Properties.Settings.Default.UseGmail);
+      MessageBox.Show(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
 		}
 
 		private void OnNewMessage(object sender, NewMessageEventArgs e) {
@@ -142,7 +147,7 @@ namespace ImapNotify {
 		}
 
 		private void timer_Tick(object sender, EventArgs e) {
-//			UpdateTrayIcon(Imap.GetUnreadCount());
+			UpdateTrayIcon(Imap.GetUnreadCount());
 		}
 
 		private void UpdateTrayIcon(int Count) {
