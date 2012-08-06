@@ -8,6 +8,7 @@ namespace ImapNotify {
 
 	class Imap {
 		private static ImapClient IC;
+		private static bool IsRunning = false;
 		public static event NewMessageEventHandler NewMessageEvent;
 
 		public static void Start() {
@@ -22,6 +23,7 @@ namespace ImapNotify {
 
 			IC = new ImapClient(Host, Username, Password, ImapClient.AuthMethods.Login,
 				Port, SSL);
+			IsRunning = true;
 
 			IC.NewMessage += (sender, e) => {
 				MailMessage m = IC.GetMessage(e.MessageCount - 1);
@@ -32,10 +34,14 @@ namespace ImapNotify {
         }
 
 		public static void Stop() {
-			IC.Dispose();
+			if(IsRunning)
+				IC.Dispose();
+			IsRunning = false;
 		}
 
 		public static int GetUnreadCount() {
+			if (!IsRunning)
+				return 0;
 			return IC.GetUnreadCount();
 		}
 	}
