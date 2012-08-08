@@ -25,13 +25,17 @@ namespace ImapNotify {
 				Port, SSL);
 			IsRunning = true;
 
+      /* Does NOT run in the context of the "UI thread" but in its _own_ thread */
 			IC.NewMessage += (sender, e) => {
-				MailMessage m = IC.GetMessage(e.MessageCount - 1);
-				NewMessageEventArgs args = new NewMessageEventArgs(
-					IC.GetMessage(e.MessageCount - 1), e.MessageCount);
+        MailMessage m = null;
+        lock (IC) {
+          m = IC.GetMessage(e.MessageCount - 1, false, false);
+        };
+        NewMessageEventArgs args = new NewMessageEventArgs(
+          m, e.MessageCount);
 				NewMessageEvent(sender, args);
 			};
-        }
+    }
 
 		public static void Stop() {
 			if(IsRunning)
@@ -39,10 +43,18 @@ namespace ImapNotify {
 			IsRunning = false;
 		}
 
+    public static bool Started() {
+      return IsRunning;
+    }
+
 		public static int GetUnreadCount() {
 			if (!IsRunning)
 				return 0;
-			return IC.GetUnreadCount();
+      int Count = 0;
+      lock (IC) {
+        Count = IC.GetUnreadCount();
+      }
+			return Count;
 		}
 	}
 

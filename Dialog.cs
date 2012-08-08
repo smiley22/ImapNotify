@@ -5,6 +5,7 @@ using System.IO;
 using System.Media;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Net.NetworkInformation;
 using Microsoft.Win32;
 
 namespace ImapNotify {
@@ -25,6 +26,8 @@ namespace ImapNotify {
 			Location = new Point(
 				Screen.PrimaryScreen.WorkingArea.Width	- Width,
 				Screen.PrimaryScreen.WorkingArea.Height - Height);
+      NetworkChange.NetworkAvailabilityChanged += new NetworkAvailabilityChangedEventHandler(OnNetworkAvailabilityChanged);
+      SystemEvents.PowerModeChanged += new PowerModeChangedEventHandler(OnPowerModeChanged);
 			Imap.NewMessageEvent += new NewMessageEventHandler(OnNewMessage);
 			try {
 				if (Properties.Settings.Default.Username == "" ||
@@ -100,7 +103,6 @@ namespace ImapNotify {
 		private void Dialog_Load(object sender, EventArgs e) {
 			textPassword.Text = Encryption.DecryptString(Properties.Settings.Default.Password);
 			EnableFields(!Properties.Settings.Default.UseGmail);
-      MessageBox.Show(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
 		}
 
 		private void OnNewMessage(object sender, NewMessageEventArgs e) {
@@ -147,7 +149,17 @@ namespace ImapNotify {
 		}
 
 		private void timer_Tick(object sender, EventArgs e) {
-			UpdateTrayIcon(Imap.GetUnreadCount());
+      if (Util.IsInternetConnected()) {
+        if (Imap.Started())
+          UpdateTrayIcon(Imap.GetUnreadCount());
+        else {
+          /* attempt to silently reconnect */
+          Reconnect(false);
+        }
+      } else {
+        /* Stop if not connected to the internet */
+        Imap.Stop();
+      }
 		}
 
 		private void UpdateTrayIcon(int Count) {
@@ -185,16 +197,28 @@ namespace ImapNotify {
 			tipURL.Show("URL to go to when clicking on\ntrayicon or balloontip. If none,\njust leave empty.", textURL);
 		}
 
-		private void Reconnect() {
+		private void Reconnect(bool checkForNewMails = true) {
 			try {
 				Imap.Stop();
 				Imap.Start();
-				CheckNewMail();
+        if(checkForNewMails)
+  				CheckNewMail();
 			}
 			catch (Exception ex) {
 				notifyIcon.ShowBalloonTip(500, "Error connecting to host", ex.Message,
 					ToolTipIcon.Error);
 			}
 		}
+
+    private void OnNetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e) {
+      /* Unfortunately this seems unreliable, so whenever network availability changes
+       * we disconnect and let the tick event take care of reconnecting */
+      Imap.Stop();
+    }
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e) {
+      if(e.Mode == PowerModes.Suspend)
+        Imap.Stop();
+    }
 	}
 }
