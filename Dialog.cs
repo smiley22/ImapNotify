@@ -18,29 +18,27 @@ namespace ImapNotify {
 			InitializeComponent();
 			IconOld = notifyIcon.Icon;
 			soundPath = Path.GetDirectoryName(
-				Assembly.GetExecutingAssembly().Location)+ @"\Notify.wav";
-      if (!File.Exists(soundPath)) {
-        soundPath = Environment.GetFolderPath(Environment.SpecialFolder.Windows) +
-          @"\Media\Windows Notify.wav";
-      }
+				Assembly.GetExecutingAssembly().Location) + @"\Notify.wav";
+			if (!File.Exists(soundPath)) {
+				soundPath = Environment.GetFolderPath(Environment.SpecialFolder.Windows) +
+					@"\Media\Windows Notify.wav";
+			}
 			Location = new Point(
-				Screen.PrimaryScreen.WorkingArea.Width	- Width,
+				Screen.PrimaryScreen.WorkingArea.Width - Width,
 				Screen.PrimaryScreen.WorkingArea.Height - Height);
-      NetworkChange.NetworkAvailabilityChanged += new NetworkAvailabilityChangedEventHandler(OnNetworkAvailabilityChanged);
-      SystemEvents.PowerModeChanged += new PowerModeChangedEventHandler(OnPowerModeChanged);
+			NetworkChange.NetworkAvailabilityChanged += new NetworkAvailabilityChangedEventHandler(OnNetworkAvailabilityChanged);
+			SystemEvents.PowerModeChanged += new PowerModeChangedEventHandler(OnPowerModeChanged);
 			Imap.NewMessageEvent += new NewMessageEventHandler(OnNewMessage);
 			try {
 				if (Properties.Settings.Default.Username == "" ||
 					Properties.Settings.Default.Password == "") {
-						notifyIcon.ShowBalloonTip(300, "First Run?", "Right-cick to configure settings",
-							ToolTipIcon.Info);
-				}
-				else {
+					notifyIcon.ShowBalloonTip(300, "First Run?", "Right-cick to configure settings",
+						ToolTipIcon.Info);
+				} else {
 					Imap.Start();
 					CheckNewMail();
 				}
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				notifyIcon.ShowBalloonTip(300, "Error connecting to host", ex.Message,
 					ToolTipIcon.Error);
 			}
@@ -111,7 +109,7 @@ namespace ImapNotify {
 			if (Properties.Settings.Default.PlaySound) {
 				try {
 					(new SoundPlayer(soundPath)).Play();
-				} catch(Exception) {}
+				} catch (Exception) { }
 			}
 			UpdateTrayIcon(Imap.GetUnreadCount());
 		}
@@ -122,7 +120,7 @@ namespace ImapNotify {
 				Properties.Settings.Default.URL;
 			if ((Control.MouseButtons & MouseButtons.Right) == MouseButtons.Right)
 				return;
-			if(site != "")
+			if (site != "")
 				Process.Start(site);
 			notifyIcon.Icon = IconOld;
 		}
@@ -149,25 +147,24 @@ namespace ImapNotify {
 		}
 
 		private void timer_Tick(object sender, EventArgs e) {
-      if (Util.IsInternetConnected()) {
-        if (Imap.Started())
-          UpdateTrayIcon(Imap.GetUnreadCount());
-        else {
-          /* attempt to silently reconnect */
-          Reconnect(false);
-        }
-      } else {
-        /* Stop if not connected to the internet */
-        Imap.Stop();
-      }
+			if (Util.IsInternetConnected()) {
+				if (Imap.Started())
+					UpdateTrayIcon(Imap.GetUnreadCount());
+				else {
+					/* attempt to silently reconnect */
+					Reconnect(false);
+				}
+			} else {
+				/* Stop if not connected to the internet */
+				Imap.Stop();
+			}
 		}
 
 		private void UpdateTrayIcon(int Count) {
 			if (Count > 0) {
 				notifyIcon.Text = Count.ToString() + " unread message" + (Count > 1 ? "s" : "");
 				notifyIcon.Icon = Properties.Resources.IconUnread;
-			}
-			else {
+			} else {
 				notifyIcon.Text = "No new messages";
 				notifyIcon.Icon = IconOld;
 			}
@@ -181,8 +178,7 @@ namespace ImapNotify {
 				if (Properties.Settings.Default.PlaySound) {
 					try {
 						(new SoundPlayer(soundPath)).Play();
-					}
-					catch (Exception) { }
+					} catch (Exception) { }
 				}
 			}
 			UpdateTrayIcon(Count);
@@ -201,24 +197,23 @@ namespace ImapNotify {
 			try {
 				Imap.Stop();
 				Imap.Start();
-        if(checkForNewMails)
-  				CheckNewMail();
-			}
-			catch (Exception ex) {
+				if (checkForNewMails)
+					CheckNewMail();
+			} catch (Exception ex) {
 				notifyIcon.ShowBalloonTip(500, "Error connecting to host", ex.Message,
 					ToolTipIcon.Error);
 			}
 		}
 
-    private void OnNetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e) {
-      /* Unfortunately this seems unreliable, so whenever network availability changes
-       * we disconnect and let the tick event take care of reconnecting */
-      Imap.Stop();
-    }
+		private void OnNetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e) {
+			/* Unfortunately this seems unreliable, so whenever network availability changes
+			 * we disconnect and let the tick event take care of reconnecting */
+			Imap.Stop();
+		}
 
-    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e) {
-      if(e.Mode == PowerModes.Suspend)
-        Imap.Stop();
-    }
+		private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e) {
+			if (e.Mode == PowerModes.Suspend)
+				Imap.Stop();
+		}
 	}
 }

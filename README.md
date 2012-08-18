@@ -7,7 +7,6 @@ option. You can obtain the source code at:
 	https://github.com/smiley22/ImapNotify
 
 ###Credits
-This program uses the AE.Net.Mail library (copyright © 2012 Andy Edinborough).
 The application icon is part of the 'Oxygon icon pack' (Copyright © Oxygen Team).
 
 ###License
