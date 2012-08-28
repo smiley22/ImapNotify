@@ -30,7 +30,7 @@ namespace ImapNotify {
 				MailMessage m = null;
 				int messageCount;
 				lock (IC) {
-					m = IC.GetMessage(e.MessageUID, false);
+					m = IC.GetMessage(e.MessageUID, FetchOptions.TextOnly, false);
 					messageCount = IC.Search(SearchCondition.Unseen()).Length;
 				};
 				NewMessageEventArgs args = new NewMessageEventArgs(m, messageCount);

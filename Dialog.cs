@@ -111,7 +111,7 @@ namespace ImapNotify {
 					(new SoundPlayer(soundPath)).Play();
 				} catch (Exception) { }
 			}
-			UpdateTrayIcon(Imap.GetUnreadCount());
+			UpdateTrayIcon(e.UnreadMails);
 		}
 
 		private void notifyIcon_BalloonTipClicked(object sender, EventArgs e) {
